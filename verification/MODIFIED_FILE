@@ -19,3 +19,8 @@ Verification artifacts:
 - verification/DIFF_FILE
 - verification/VERIFICATION.txt
 - verification/ROLLBACK.sh
+
+Current release-cover change:
+- Changed field: docs/assets/siren-records-readme-cover.png
+- Branch: GitHub README / repository cover generated with the configured image skill
+- Result: PNG 2048 x 1024, official-catalog visual language, README reference unchanged

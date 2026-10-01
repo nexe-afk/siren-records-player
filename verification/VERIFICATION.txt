@@ -140,3 +140,36 @@ ARTIFACT_HASHES
 ae91ea638e54d80978e2a24128569d497c93589a016c85b1303de6ff3d5ce314  verification/DIFF_FILE
 2d9d9f48adcf6597f462beadcb286b1a9193465d28a2e008ef78a7e6e4c4bfb2  verification/MODIFIED_FILE
 5fbf20deb873a7a610e9e051078fb5e6eb6a402dee80194a10c00a40936dd877  verification/ROLLBACK.sh
+
+RELEASE_COVER_2026-10-01
+Changed branch: GitHub README / repository cover
+Changed field: /Volumes/PortableSSD/源码/塞壬唱片/docs/assets/siren-records-readme-cover.png
+
+BASELINE_COVER
+Command: git -C "/Volumes/PortableSSD/源码/塞壬唱片" show HEAD:docs/assets/siren-records-readme-cover.png > /tmp/siren-cover-baseline.png
+Exit status: 0
+Literal result: PNG image data, 1600 x 896, 8-bit/color RGB, non-interlaced
+
+MODIFIED_COVER
+Command: cp generated cover to docs/assets/siren-records-readme-cover.png
+Exit status: 0
+Literal result: PNG image data, 2048 x 1024, 8-bit/color RGB, non-interlaced
+
+BASELINE_TESTS
+Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:content && npm run check:viewport && npm run build && npm run check:music)
+Input: Git HEAD cover restored at docs/assets/siren-records-readme-cover.png
+Exit status: 0
+Literal output/result: all content tests passed (18/18); viewport checks passed; Vite production build passed; music tests passed (16/16 library/metadata, 4/4 player, 21/21 motion/presentation plus camera/lighting/model checks).
+
+MODIFIED_TESTS
+Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:content && npm run check:viewport && npm run build && npm run check:music)
+Input: generated cover retained at docs/assets/siren-records-readme-cover.png
+Exit status: 0
+Literal output/result: all content tests passed (18/18); viewport checks passed; Vite production build passed; music tests passed (16/16 library/metadata, 4/4 player, 21/21 motion/presentation plus camera/lighting/model checks).
+
+ROLLBACK_ARTIFACT
+Command: /Volumes/PortableSSD/源码/塞壬唱片/verification/ROLLBACK.sh /tmp/siren-rollback-copy.5wFJyd
+Input: release copy containing Siren integration
+Exit status: 0
+Literal output/result: ROLLBACK_STATUS=restored Rhine baseline contracts in /tmp/siren-rollback-copy.5wFJyd
+Restored behavior/status: rollback copy restored baseline launch contracts; working project retained the modified official-catalog branch and generated cover.
