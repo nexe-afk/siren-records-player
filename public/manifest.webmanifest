@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Rhine Music Demo",
-  "short_name": "Rhine Music",
-  "description": "以三维专辑卡片浏览和播放本地音乐",
+  "name": "塞壬唱片播放器",
+  "short_name": "塞壬唱片",
+  "description": "塞壬唱片-MSR 官方曲库本地播放器",
   "lang": "zh-CN",
   "start_url": "./?source=pwa",
   "scope": "./",

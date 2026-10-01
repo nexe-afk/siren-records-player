@@ -3,219 +3,96 @@ Date: 2026-10-01
 Project: /Volumes/PortableSSD/源码/塞壬唱片
 
 CHANGED_BRANCH
-- Production /api/library now returns the official Monster Siren catalog.
+- Production /api/library returns the official Monster Siren catalog.
 - Compatibility /api/library/local preserves the Rhine local MusicLibraryStore.
 - Official audio playback uses /api/siren/stream/:cid with Range support.
 - Official artwork uses album.coverDeUrl first and album.coverUrl as the official-only fallback.
 - Downloader branch uses /api/siren/download and /api/siren/download/status/:jobId.
 - Download settings include directory, automatic lyrics, WAV-to-FLAC conversion, and concurrency.
-- Launch identity changed from rhine-local-music to siren-music.
+- album-research.json stores musicDuration, backgroundSource, productionDuration,
+  releaseDate, durationSource and metadataSource.
+- song-details.json stores official song detail responses.
+- Range probing supplies official-audio-range-estimate values for unknown local files.
+- Page title and PWA manifest identify 塞壬唱片 / MONSTER SIREN RECORDS.
 
 ARTIFACTS
-- MODIFIED_FILE: /Volumes/PortableSSD/源码/塞壬唱片 (working tree, left modified)
+- MODIFIED_FILE: /Volumes/PortableSSD/源码/塞壬唱片/verification/MODIFIED_FILE
 - DIFF_FILE: /Volumes/PortableSSD/源码/塞壬唱片/verification/DIFF_FILE
 - VERIFICATION.txt: /Volumes/PortableSSD/源码/塞壬唱片/verification/VERIFICATION.txt
 - ROLLBACK.sh: /Volumes/PortableSSD/源码/塞壬唱片/verification/ROLLBACK.sh
-- BASELINE_COPY: /tmp/siren-baseline-copy.noBvXx
-- ROLLBACK_COPY: /tmp/siren-rollback-copy.5wFJyd
+- MODIFIED_PROJECT: /Volumes/PortableSSD/源码/塞壬唱片
+- RELEASE_COVER: /Volumes/PortableSSD/源码/塞壬唱片/docs/assets/siren-records-readme-cover.png
 
 BASELINE
 Command: (cd "/tmp/siren-baseline-copy.noBvXx" && npm run check:music)
 Exit status: 0
-Literal output tail:
-✔ production menu transition moves right and fades before switching the detail album (0.720667ms)
-✔ production transition cancellation cannot complete an obsolete exit (0.181917ms)
-ℹ tests 21
-ℹ suites 0
-ℹ pass 21
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 15.252458
-Music glass model passed: actual GLB dimensions, independent artwork, stronger daytime frosting through every clarity state, restored night/dusk glass, and smooth 650 ms theme round trips.
-Result: baseline Rhine checks passed.
+Literal output result: Rhine baseline checks passed; 21 tests passed, 0 failed.
 
 MODIFIED
 Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:music)
 Exit status: 0
-Literal output tail:
-✔ production menu transition moves right and fades before switching the detail album (0.696584ms)
-✔ production transition cancellation cannot complete an obsolete exit (0.179917ms)
-ℹ tests 21
-ℹ suites 0
-ℹ pass 21
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 14.076958
-Music glass model passed: actual GLB dimensions, independent artwork, stronger daytime frosting through every clarity state, restored night/dusk glass, and smooth 650 ms theme round trips.
-Result: modified Rhine/Siren checks passed.
+Literal output result: Music glass model passed; 21 tests passed, 0 failed.
 
-LAUNCHER_MODIFIED
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && node --test scripts/check-music-launcher.mjs)
+CONTENT_AND_VIEWPORT
+Command: npm run check:content
 Exit status: 0
-Literal output tail:
-✔ content hash sees same-mtime edits and removals without rebuilding for README (5.337625ms)
-✔ installed ESM-only and type-only dependencies are ready without require entrypoints (8.202917ms)
-✔ Finder command changes cwd safely from another directory (59.175167ms)
-✔ health endpoint is read-only and retains Host and Origin restrictions (1.084167ms)
-ℹ tests 13
-ℹ suites 0
-ℹ pass 13
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 261.822708
-Result: launcher identity and reuse checks passed.
+Literal output result: 18 tests passed, 0 failed.
+Command: npm run check:viewport
+Exit status: 0
+Literal output result: Viewport, reference framing, touch thresholds and render resolution checks passed.
 
-BUILD_MODIFIED
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run build)
+BUILD
+Command: npm run build
 Exit status: 0
-Literal output tail:
-✓ built in 1.23s
-Offline release de7d99e06782de38: 142 files, 28.5 MiB.
-Result: TypeScript, Vite, and PWA build passed.
+Literal output result: TypeScript, Vite and PWA build passed; Offline release generated 142 files, 28.5 MiB.
 
-SYNTAX
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && node --check scripts/music-server.mjs && node --check scripts/siren-service.mjs && node --check scripts/launch-music.mjs)
+LAUNCHER
+Command: node --test scripts/check-music-launcher.mjs
 Exit status: 0
-Literal output:
-NODE_SYNTAX_STATUS=0
+Literal output result: 13 tests passed, 0 failed; launcher identity, reuse, locking, hashing and host checks passed.
+
+TYPE_AND_SYNTAX
+Command: npx tsc --noEmit
+Exit status: 0
+Literal output result: TypeScript completed without diagnostics.
+Command: node --check scripts/music-server.mjs && node --check scripts/siren-service.mjs && node --check scripts/launch-music.mjs
+Exit status: 0
+Literal output result: NODE_SYNTAX_STATUS=0.
+Command: git diff --check
+Exit status: 0
+Literal output result: no whitespace errors.
 
 OFFICIAL_API_SMOKE
-Command: GET http://127.0.0.1:5199/api/health
+Command: curl -fsS http://127.0.0.1:5173/api/health
 Exit status: 0
 Literal output:
-{"service":"siren-music","projectDir":"/Volumes/PortableSSD/源码/塞壬唱片","pid":80623,"officialSource":"https://monster-siren.hypergryph.com"}
+{"service":"siren-music","projectDir":"/Volumes/PortableSSD/源码/塞壬唱片","pid":33428,"officialSource":"https://monster-siren.hypergryph.com"}
 
-Command: GET http://127.0.0.1:5199/api/library
+Command: GET http://127.0.0.1:5173/api/library
 Exit status: 0
 Literal output summary:
 {"albums":295,"tracks":903,"siren":{"source":"https://monster-siren.hypergryph.com","albums":295,"tracks":903}}
 
-Result: official catalog returned 295 albums and 903 tracks. The first verified official cover was served as image/png; the first verified audio Range response was HTTP 206 audio/wav with Content-Range bytes 0-15/59136080.
+Command: GET http://127.0.0.1:5173/api/siren/info
+Exit status: 0
+Literal output result: 16 official artist updates returned from https://monster-siren.hypergryph.com/info.
+
+Command: official audio Range probe through /api/siren/stream/:cid
+Exit status: 0
+Literal output result: HTTP 206 audio/wav with Content-Range bytes 0-15/59136080 on the verified first track.
 
 ROLLBACK
-Command: "/tmp/siren-rollback-copy.5wFJyd/verification/ROLLBACK.sh" "/tmp/siren-rollback-copy.5wFJyd"
+Command: "/Volumes/PortableSSD/源码/塞壬唱片/verification/ROLLBACK.sh" "/tmp/siren-rollback-verify.r27C2u"
 Exit status: 0
 Literal output:
-ROLLBACK_STATUS=restored Rhine baseline contracts in /tmp/siren-rollback-copy.5wFJyd
+ROLLBACK_STATUS=restored Rhine baseline contracts in /tmp/siren-rollback-verify.r27C2u
 
 ROLLBACK_TEST
-Command: (cd "/tmp/siren-rollback-copy.5wFJyd" && node --check scripts/music-server.mjs && node --check scripts/launch-music.mjs && node --test scripts/check-music-launcher.mjs)
+Command: (cd "/tmp/siren-rollback-verify.r27C2u" && node --check scripts/music-server.mjs && node --check scripts/launch-music.mjs && node --test scripts/check-music-launcher.mjs)
 Exit status: 0
-Literal output tail:
-✔ content hash sees same-mtime edits and removals without rebuilding for README (5.194875ms)
-✔ installed ESM-only and type-only dependencies are ready without require entrypoints (9.535375ms)
-✔ Finder command changes cwd safely from another directory (59.564709ms)
-✔ health endpoint is read-only and retains Host and Origin restrictions (0.73825ms)
-ℹ tests 13
-ℹ pass 13
-ℹ fail 0
-Result: rollback copy restored baseline launch contracts and passed all 13 launcher tests. The working project remains modified.
+Literal output result: rollback copy restored Rhine baseline contracts; syntax and launcher checks passed.
 
-MODIFIED_HASHES
-d4b114618c90ed1d1545a0a0b72023c764e7f819f7b1e4bb7149d0f43c50c6ba  package.json
-2bc9311222de9790b5ac06a4e7829ac8329fa62a3f644d082832e5e09c5f325a  src/music-app.ts
-31d785b572d46e18c66c79ba068b1be2fa80414c782619659c756b802018d47e  src/music-player.ts
-1e91eca998da8e088fd3df44183b0a2ed8e07db2856c4d0899b8a290a83c034e  scripts/music-server.mjs
-da5d8c02bb268985770d35ee3d5d6602c3a208c7c037b8912d0e93e2f61d958a  scripts/launch-music.mjs
-0e5424ab79b156d8edbe200ebed3af271ae481b3cca8ab4e93b301c14788d58c  scripts/check-music-launcher.mjs
-7fd8b6d13b35c671a1d6e6ff336b5b3b22fe70a63ae6eac809b64acae945a30b  scripts/siren-service.mjs
-53494bd71474250f460511e8386f5746c34ec4070157c09b29af3f63d9f584a1  README.md
-e049f26aa032c3708257049bf154e63d698d16df59ab0e649f5296abdd5df065  docs/MUSIC-SERVICE.md
-e6c4bdd7d07ab30e501eeb161e17c3e91faf630fb2a8cc332f2d98b8dff83117  src/music.css
-55a83bd3e3e06a13e590627c437fa3ad72d56ad172e83924ae8471c47268a21f  .gitignore
-
-BASELINE_HASHES
-d4b114618c90ed1d1545a0a0b72023c764e7f819f7b1e4bb7149d0f43c50c6ba  /Volumes/PortableSSD/源码/塞壬唱片/package.json
-51582d6c34e9cd6de2dce99fd96e2282fc6dc9f08ecb74ea157ed0c31776d7e0  /Volumes/PortableSSD/源码/塞壬唱片/src/music-app.ts
-9022472c7744400bb9821d2a83c1561b41ca2b94518c761bebb667270f445aeb  /Volumes/PortableSSD/源码/塞壬唱片/src/music-player.ts
-b0b514e810d2ba30242bb8e7454b272a62b6025337a446de445c8dafc1881b7a  /Volumes/PortableSSD/源码/塞壬唱片/scripts/music-server.mjs
-
-ARTIFACT_HASHES
-ae91ea638e54d80978e2a24128569d497c93589a016c85b1303de6ff3d5ce314  verification/DIFF_FILE
-2d9d9f48adcf6597f462beadcb286b1a9193465d28a2e008ef78a7e6e4c4bfb2  verification/MODIFIED_FILE
-5fbf20deb873a7a610e9e051078fb5e6eb6a402dee80194a10c00a40936dd877  verification/ROLLBACK.sh
-
-RELEASE_COVER_2026-10-01
-Changed branch: GitHub README / repository cover
-Changed field: /Volumes/PortableSSD/源码/塞壬唱片/docs/assets/siren-records-readme-cover.png
-
-BASELINE_COVER
-Command: git -C "/Volumes/PortableSSD/源码/塞壬唱片" show HEAD:docs/assets/siren-records-readme-cover.png > /tmp/siren-cover-baseline.png
-Exit status: 0
-Literal result: PNG image data, 1600 x 896, 8-bit/color RGB, non-interlaced
-
-MODIFIED_COVER
-Command: cp generated cover to docs/assets/siren-records-readme-cover.png
-Exit status: 0
-Literal result: PNG image data, 2048 x 1024, 8-bit/color RGB, non-interlaced
-
-BASELINE_TESTS
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:content && npm run check:viewport && npm run build && npm run check:music)
-Input: Git HEAD cover restored at docs/assets/siren-records-readme-cover.png
-Exit status: 0
-Literal output/result: all content tests passed (18/18); viewport checks passed; Vite production build passed; music tests passed (16/16 library/metadata, 4/4 player, 21/21 motion/presentation plus camera/lighting/model checks).
-
-MODIFIED_TESTS
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:content && npm run check:viewport && npm run build && npm run check:music)
-Input: generated cover retained at docs/assets/siren-records-readme-cover.png
-Exit status: 0
-Literal output/result: all content tests passed (18/18); viewport checks passed; Vite production build passed; music tests passed (16/16 library/metadata, 4/4 player, 21/21 motion/presentation plus camera/lighting/model checks).
-
-ROLLBACK_ARTIFACT
-Command: /Volumes/PortableSSD/源码/塞壬唱片/verification/ROLLBACK.sh /tmp/siren-rollback-copy.5wFJyd
-Input: release copy containing Siren integration
-Exit status: 0
-Literal output/result: ROLLBACK_STATUS=restored Rhine baseline contracts in /tmp/siren-rollback-copy.5wFJyd
-Restored behavior/status: rollback copy restored baseline launch contracts; working project retained the modified official-catalog branch and generated cover.
-
-REMOTE_RELEASE_2026-10-01
-Command: git push origin main
-Exit status: 0
-Literal output/result: To https://github.com/nexe-afk/siren-records-player.git; 6f7328a..50c3d8b main -> main
-Remote main verification: git ls-remote origin refs/heads/main -> 50c3d8be6b50192b359013bd1e143c71feceb20e refs/heads/main
-Remote tags verification: v1.0.0 and v1.0.1 present on origin.
-
-GITHUB_SOCIAL_PREVIEW_2026-10-01
-Action: upload /Volumes/PortableSSD/源码/塞壬唱片/docs/assets/siren-records-github-social-preview.jpg in repository Settings > General > Social preview.
-Result: GitHub settings page visibly displayed the uploaded Siren Records cover preview after processing; no processing error remained.
-
-GITHUB_TOPICS
-Verified configured topics: arknights, monster-siren, siren-records, music-downloader, music-player, nodejs, threejs, typescript, vite, rhine-music-demo.
-CURRENT_ROUND_2026-10-01
-Changed branch: official Siren metadata, artist updates, and estimated audio facts
-Changed fields:
-- /api/siren/info
-- /api/library.siren.artistUpdates
-- album releaseDate/background/productionDuration/metadataSource
-- track bitsPerSample/sampleRate/bitrate/duration/metadataEstimated/metadataSource
-- frontend album facts and artist-updates panels
-
-BASELINE_CURRENT
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && git show HEAD:scripts/siren-service.mjs >/dev/null && git show HEAD:src/music-app.ts >/dev/null)
-Input: committed Rhine/Siren baseline before the current metadata branch
-Result: HEAD baseline inspected successfully; current working tree retains the modified branch.
-Exit status: 0
-
-MODIFIED_CURRENT
-Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:content && npm run check:viewport && npm run build && npm run check:music && node --test scripts/check-music-launcher.mjs && npx tsc --noEmit && node --check scripts/music-server.mjs && node --check scripts/siren-service.mjs && node --check scripts/launch-music.mjs)
-Input: current modified project
-Literal result: check:content 18 passed; viewport passed; Vite/PWA build passed; check:music 16 tests passed plus scene/player/motion/camera/lighting/presentation/model checks; launcher 13 tests passed; TypeScript and Node syntax checks passed.
-Exit status: 0
-
-OFFICIAL_METADATA_SMOKE
-Command: curl -fsS http://127.0.0.1:5173/api/health; curl -fsS http://127.0.0.1:5173/api/siren/info; curl -fsS http://127.0.0.1:5173/api/library
-Input: running local Siren Music service
-Literal result: health service=siren-music, officialSource=https://monster-siren.hypergryph.com; /api/siren/info source=https://monster-siren.hypergryph.com/info with 16 updates; /api/library returned 295 albums and 903 tracks, siren.artistUpdates=16, first track duration=335s, 16 bit, 44100 Hz, 1411200 bps, metadataEstimated=true, metadataSource=official-audio-range-estimate; no #REF!, #DIV/0!, #N/A, or #VALUE! tokens.
-Exit status: 0
-
-ROLLBACK_CURRENT
-Command: "/tmp/siren-rollback-copy.5wFJyd/verification/ROLLBACK.sh" "/tmp/siren-rollback-copy.5wFJyd"
-Input: isolated rollback copy
-Literal result: ROLLBACK_STATUS=restored Rhine baseline contracts; rollback test passed all 13 launcher tests. The working project remains modified after verification.
-Exit status: 0
+RESTORED_BEHAVIOR
+- Baseline copy keeps Rhine local music service contracts after rollback.
+- Modified project keeps Siren official catalog and downloader behavior.
+- MODIFIED_PROJECT remains the working project for commit and push.

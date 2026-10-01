@@ -1,34 +1,29 @@
 MODIFIED_FILE manifest
 Project: /Volumes/PortableSSD/源码/塞壬唱片
-State: modified working tree retained
+State: modified working tree retained until commit, then pushed to origin/main
 
-Primary modified files:
-- README.md
-- docs/MUSIC-SERVICE.md
-- scripts/music-server.mjs
+Primary modified files in this release:
+- index.html
+- public/manifest.webmanifest
 - scripts/siren-service.mjs
-- scripts/launch-music.mjs
-- scripts/check-music-launcher.mjs
 - src/music-app.ts
-- src/music-player.ts
 - src/music-types.ts
 - src/music.css
-- .gitignore
 
-Verification artifacts:
-- verification/DIFF_FILE
-- verification/VERIFICATION.txt
-- verification/ROLLBACK.sh
+Implemented metadata branch:
+- Official Monster Siren catalog: 295 albums / 903 tracks.
+- Official artwork only: coverDeUrl, then official coverUrl.
+- Official audio, lyric, album-intro and artist-update sources.
+- album-research.json cache with musicDuration, backgroundSource,
+  productionDuration, releaseDate, durationSource and metadataSource.
+- song-details.json cache with official song details.
+- HTTP Range probing estimates audio size, duration, bitrate and lossless
+  technical fields before local download; downloaded files use real metadata.
+- Artist updates from https://monster-siren.hypergryph.com/info: 16 entries.
+- Page title and PWA manifest now use 塞壬唱片 / MONSTER SIREN RECORDS.
+- Album detail facts now include music total duration and background source.
 
-Current release-cover change:
+Release-cover branch:
 - Changed field: docs/assets/siren-records-readme-cover.png
-- Branch: GitHub README / repository cover generated with the configured image skill
-- Result: PNG 2048 x 1024, official-catalog visual language, README reference unchanged
-
-Current metadata branch:
-- /api/siren/info returns official artist updates from monster-siren.hypergryph.com/info.
-- /api/library.siren.artistUpdates contains 16 official updates.
-- Official album dates are extracted from official release resources; productionDuration is explicitly 官方未公开.
-- Audio metadata uses local parsed values when downloaded and official-audio-range-estimate values otherwise.
-- Frontend renders release date, background, production duration, bitrate, bit depth, sample rate, duration, estimate labels, and artist updates.
-- Last smoke test: 295 albums, 903 tracks, 16 artist updates; health and build endpoints passed.
+- Result: PNG 2048 x 1024, generated with the configured image skill and
+  referenced by README.md.

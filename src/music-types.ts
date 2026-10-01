@@ -40,6 +40,9 @@ export interface MusicAlbum {
   releaseDate?: string;
   background?: string;
   productionDuration?: string;
+  musicDuration?: string;
+  backgroundSource?: string;
+  durationSource?: string;
   metadataSource?: string;
   discCount?: number;
   description?: string;

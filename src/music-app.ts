@@ -1000,8 +1000,8 @@ function albumAbout(a: MusicAlbum) {
     : a.descriptionSource?.url;
   const background = a.background || a.description;
   return `<section class="album-about"><small>ABOUT THIS ALBUM</small>
-    ${background ? `<h3>歌曲背景</h3><p>${esc(background)}</p>` : `<h3>歌曲背景</h3><p>官方音乐页暂未提供专辑背景说明。</p>`}
-    <dl class="album-source-facts"><div><dt>发行日期</dt><dd>${esc(a.releaseDate || (a.year ? String(a.year) : "官方未提供"))}</dd></div><div><dt>制作时长</dt><dd>${esc(a.productionDuration || "官方未公开")}</dd></div><div><dt>年份来源</dt><dd>${esc(a.metadataSource || "塞壬唱片官方音乐页")}</dd></div></dl>
+    ${background ? `<h3>歌曲背景</h3><p>${esc(background)}</p>${a.backgroundSource ? `<small class="source-inline">背景来源：${esc(a.backgroundSource)}</small>` : ""}` : `<h3>歌曲背景</h3><p>官方音乐页暂未提供专辑背景说明。</p>`}
+    <dl class="album-source-facts"><div><dt>发行日期</dt><dd>${esc(a.releaseDate || (a.year ? String(a.year) : "官方未提供"))}</dd></div><div><dt>制作时长</dt><dd>${esc(a.productionDuration || "官方未公开")}</dd></div><div><dt>音乐总时长</dt><dd>${esc(a.musicDuration || time(albumDuration(a)))}</dd></div><div><dt>年份来源</dt><dd>${esc(a.metadataSource || "塞壬唱片官方音乐页")}</dd></div></dl>
     ${officialSource ? `<a class="text-button" href="${esc(officialSource)}" target="_blank" rel="noopener">打开塞壬唱片官方音乐页 ↗</a>` : ""}
     ${!demo ? `<button data-action="introduction-album" class="text-button" ${introductionsStarting || library.introductions?.running ? "disabled" : ""}>${a.description ? "更新" : "查询"}专辑介绍 ↗</button><p class="introduction-feedback" data-introduction-feedback="${esc(a.id)}" role="status">${esc(introductionAlbumStatus(a))}</p>` : ""}
     ${updates.length ? `<div class="artist-updates"><h3>艺人近况</h3>${updates.map((item) => `<article><time>${esc(item.date || "官方动态")}</time><strong>${esc(item.title)}</strong>${item.description ? `<p>${esc(item.description.slice(0, 180))}</p>` : ""}</article>`).join("")}<a class="text-button" href="https://monster-siren.hypergryph.com/info" target="_blank" rel="noopener">查看官方艺人近况 ↗</a></div>` : ""}

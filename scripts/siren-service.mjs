@@ -40,6 +40,15 @@ const extFromUrl = (value, fallback = ".mp3") => {
     return fallback;
   }
 };
+const formatDuration = (seconds) => {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+    : `${minutes}:${String(secs).padStart(2, "0")}`;
+};
 const officialDate = (value) => {
   const match = String(value || "").match(/\/(20\d{2})(\d{2})(\d{2})\//);
   return match ? `${match[1]}-${match[2]}-${match[3]}` : undefined;
@@ -151,6 +160,7 @@ export class SirenService {
     this.songDetailsFile = path.join(this.cacheDir, "song-details.json");
     this.audioMetadataFile = path.join(this.cacheDir, "audio-metadata.json");
     this.artistUpdatesFile = path.join(this.cacheDir, "artist-updates.json");
+    this.albumResearchFile = path.join(this.cacheDir, "album-research.json");
     this.configFile = path.join(this.cacheDir, "config.json");
     this.config = {
       downloadDir,
@@ -166,8 +176,10 @@ export class SirenService {
     this.catalogCache = null;
     this.albumCache = new Map();
     this.songCache = new Map();
+    this.songDetailsCache = new Map();
     this.audioMetadataCache = new Map();
     this.artistUpdatesCache = [];
+    this.albumResearchCache = new Map();
     this.jobs = new Map();
     this.jobSequence = 0;
   }
@@ -178,7 +190,15 @@ export class SirenService {
     const savedMetadata = await readJson(this.audioMetadataFile, {});
     for (const [cid, value] of Object.entries(savedMetadata || {}))
       this.audioMetadataCache.set(cid, value);
+    const savedSongDetails = await readJson(this.songDetailsFile, {});
+    for (const [cid, value] of Object.entries(savedSongDetails || {})) {
+      this.songDetailsCache.set(cid, value);
+      this.songCache.set(cid, value);
+    }
     this.artistUpdatesCache = await readJson(this.artistUpdatesFile, []);
+    const savedResearch = await readJson(this.albumResearchFile, {});
+    for (const [cid, value] of Object.entries(savedResearch || {}))
+      this.albumResearchCache.set(cid, value);
     return this;
   }
 
@@ -231,13 +251,18 @@ export class SirenService {
     const value = await fetchJson(`${API}/song/${encodeURIComponent(key)}`);
     const song = value?.song ?? value;
     this.songCache.set(key, song);
+    this.songDetailsCache.set(key, song);
+    await writeJson(
+      this.songDetailsFile,
+      Object.fromEntries(this.songDetailsCache),
+    );
     return song;
   }
 
   async getAudioMetadata(song) {
     const key = String(song.cid);
-    if (this.audioMetadataCache.has(key))
-      return this.audioMetadataCache.get(key);
+    const cached = this.audioMetadataCache.get(key);
+    if (cached && Number(cached.duration || 0) > 0) return cached;
     const spec = audioSpec(song.sourceUrl);
     let contentLength = 0;
     try {
@@ -249,7 +274,23 @@ export class SirenService {
       if (response.ok && Number.isFinite(value) && value > 0)
         contentLength = value;
     } catch {
-      /* CDN may not expose HEAD; keep the documented estimate. */
+      /* CDN may not expose HEAD; use a one-byte range probe below. */
+    }
+    if (!contentLength) {
+      try {
+        const response = await fetch(song.sourceUrl, {
+          headers: { range: "bytes=0-0" },
+          signal: AbortSignal.timeout(8000),
+        });
+        const contentRange = response.headers.get("content-range") || "";
+        const match = contentRange.match(/\/(\d+)$/);
+        const value = Number(match?.[1] || 0);
+        if (response.ok && Number.isFinite(value) && value > 0)
+          contentLength = value;
+        if (response.body) await response.body.cancel();
+      } catch {
+        /* CDN may reject range probes; keep the documented estimate. */
+      }
     }
     const duration =
       contentLength > 0
@@ -360,7 +401,10 @@ export class SirenService {
             }
           }
           let metadata = this.audioMetadataCache.get(String(song.cid));
-          if (!metadata && detail.sourceUrl) {
+          if (
+            (!metadata || Number(metadata.duration || 0) <= 0) &&
+            detail.sourceUrl
+          ) {
             try {
               metadata = await this.getAudioMetadata(detail);
             } catch {
@@ -393,6 +437,23 @@ export class SirenService {
             source: "siren",
           };
         });
+        const musicDurationSeconds = tracks.reduce(
+          (total, track) => total + Number(track.duration || 0),
+          0,
+        );
+        const research = {
+          albumCid: String(album.cid),
+          albumName: album.name,
+          background: album.intro || undefined,
+          backgroundSource: album.intro ? `${API_ORIGIN}/music` : undefined,
+          productionDuration: "官方未公开",
+          musicDurationSeconds,
+          musicDuration: formatDuration(musicDurationSeconds),
+          releaseDate: album.releaseDate,
+          sourceUrl: `${API_ORIGIN}/music`,
+          checkedAt: new Date().toISOString(),
+        };
+        this.albumResearchCache.set(String(album.cid), research);
         return {
           id: `siren-album-${album.cid}`,
           sirenAlbumCid: album.cid,
@@ -404,7 +465,10 @@ export class SirenService {
           releaseDate: album.releaseDate,
           description: album.intro || undefined,
           background: album.intro || undefined,
-          productionDuration: "官方未公开",
+          backgroundSource: research.backgroundSource,
+          productionDuration: research.productionDuration,
+          musicDuration: research.musicDuration,
+          durationSource: "official-audio-range-estimate",
           genreId: "siren-msr",
           rawGenres: ["塞壬唱片"],
           folder: `Siren-MSR/${safeName(album.name)}`,
@@ -416,6 +480,10 @@ export class SirenService {
           online: { status: "matched", sourceUrl: `${API_ORIGIN}/music` },
         };
       }),
+    );
+    await writeJson(
+      this.albumResearchFile,
+      Object.fromEntries(this.albumResearchCache),
     );
     return {
       version: 1,
@@ -584,6 +652,13 @@ export class SirenService {
     const audioMetadata =
       (await this.getLocalAudioMetadata(finalAudio)) ||
       (await this.getAudioMetadata(song));
+    if (audioMetadata?.source === "downloaded-audio") {
+      this.audioMetadataCache.set(String(song.cid), audioMetadata);
+      await writeJson(
+        this.audioMetadataFile,
+        Object.fromEntries(this.audioMetadataCache),
+      );
+    }
     const metadata = {
       cid: String(song.cid),
       title: song.name,

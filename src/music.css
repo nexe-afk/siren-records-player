@@ -782,7 +782,7 @@
 }
 .album-source-facts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin: 20px 0 16px;
 }
@@ -800,6 +800,13 @@
   margin: 0;
   font-size: 11px;
   line-height: 1.45;
+}
+.source-inline {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 .artist-updates {
   border-top: 1px solid var(--line);
