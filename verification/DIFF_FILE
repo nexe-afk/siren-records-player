@@ -1,0 +1,409 @@
+DIFF_FILE generated on 2026-10-01
+Changed branch: production /api/library -> official Siren catalog; download branch: /api/siren/download
+
+--- verification/package.json.baseline -> package.json ---
+--- verification/music-app.ts.baseline -> src/music-app.ts ---
+--- verification/music-app.ts.baseline	2026-10-01 17:35:24
++++ src/music-app.ts	2026-10-01 17:49:05
+@@ -189,19 +189,19 @@
+   <div id="three-scene" class="three-scene"></div>
+   <div class="music-vignette" aria-hidden="true"></div>
+   <header class="music-header">
+-    <div class="music-identity"><a class="music-brand" href="/" aria-label="Rhine Music 音乐库"><strong>RHINE LAB</strong><span>MUSIC ARCHIVE <i>／</i> 私人音乐终端</span></a></div>
++    <div class="music-identity"><a class="music-brand" href="/" aria-label="塞壬唱片音乐库"><strong>MONSTER SIREN</strong><span>SIREN RECORDS <i>／</i> 官方音乐终端</span></a></div>
+     <nav class="music-topnav" aria-label="音乐终端导航">
+-      <button data-action="library" aria-label="音乐库">${icons.folder}<span>音乐库</span></button>
++      <button data-action="library" aria-label="音乐库">${icons.folder}<span>塞壬唱片</span></button>
+       <button data-action="search" aria-label="搜索">${icons.search}<span>搜索</span></button>
+       <div class="theme-switch" aria-label="主题">${(["day", "night"] as Theme[]).map((t) => `<button data-theme="${t}" aria-label="${themeNames[t]}主题" aria-pressed="${preferences.theme === t}"><i class="theme-dot ${t}"></i><span>${themeNames[t]}</span></button>`).join("")}</div>
+       <button data-action="settings" class="icon-button" aria-label="播放与画质设置">${icons.settings}</button>
+       <div class="minimal-transport" role="group" aria-label="音乐播放"><button type="button" data-action="locate-playing" id="transport-track" class="transport-track" aria-label="定位当前歌曲" aria-hidden="true" disabled><span id="transport-track-label"></span></button><button data-action="play-pause" id="play-pause" aria-label="播放" aria-pressed="false"><span class="transport-glyph transport-play" aria-hidden="true">${icons.play}</span><span class="transport-glyph transport-pause" aria-hidden="true">${icons.pause}</span></button><button data-action="stop" id="stop-playback" aria-label="停止">${icons.stop}</button></div>
+     </nav>
+   </header>
+-  <div id="library-status" class="library-status"><i></i><span>正在读取本地音乐索引</span></div>
++  <div id="library-status" class="library-status"><i></i><span>正在读取塞壬唱片官方曲库</span></div>
+   <section id="music-browse" class="music-browse" aria-label="专辑浏览">
+     <div class="music-browse-veil" aria-hidden="true"></div>
+-    <div class="album-callout"><p class="music-eyebrow">MUSIC ARCHIVE <span>／</span> <span id="selection-genre"></span></p>
++    <div class="album-callout"><p class="music-eyebrow">SIREN RECORDS <span>／</span> <span id="selection-genre"></span></p>
+       <div class="selection-rule"><span id="selection-code">ALBUM <span id="selection-code-number">001</span></span><span id="selection-format"></span></div>
+       <h1 id="selection-title"></h1><p id="selection-artist" class="selection-artist"></p>
+       <div class="selection-meta" id="selection-meta"></div>
+@@ -219,8 +219,8 @@
+     <div class="card-caption"><span id="detail-card-id"></span><small>拖动卡片，查看完整封面</small></div>
+     <article id="album-detail-content" tabindex="-1"></article>
+   </section>
+-  <div id="music-empty" class="music-empty" hidden><small>YOUR PRIVATE COLLECTION</small><h1>让音乐进入这座档案馆。</h1><p>选择本地音乐文件夹，专辑封面会出现在每一张卡片上。</p><button data-action="library">设置音乐文件夹 ↗</button><button data-action="demo" class="subtle">先查看演示封面</button></div>
+-  <div class="music-bottomline"><span>LOCAL COLLECTION <i>·</i> <span id="library-count">0 ALBUMS</span></span><span id="runtime-info">THREE.JS / LOCAL</span></div>
++  <div id="music-empty" class="music-empty" hidden><small>MONSTER SIREN / OFFICIAL CATALOG</small><h1>让塞壬唱片进入这座档案馆。</h1><p>曲库来自塞壬唱片官网，封面与音频均优先使用官方资源。</p><button data-action="library">打开塞壬唱片设置 ↗</button></div>
++  <div class="music-bottomline"><span>SIREN RECORDS <i>·</i> <span id="library-count">0 ALBUMS</span></span><span id="runtime-info">THREE.JS / OFFICIAL</span></div>
+   <div id="music-panel-root"></div><div id="music-toast" role="status" aria-live="polite"></div>
+   <div id="music-loading"><span class="loading-orbit"></span><strong>OPENING THE ARCHIVE</strong><small>正在载入三维专辑架</small></div>
+ `;
+@@ -854,9 +854,15 @@
+   );
+   updatePlayingRows();
+ }
++const sirenDownloadJobs = new Map<string, string>();
++const sirenDownloadState = new Map<string, "idle" | "running" | "done" | "error">();
++function sirenDownloadLabel(cid: string) {
++  const state = sirenDownloadState.get(cid) || "idle";
++  return state === "running" ? "下载中" : state === "done" ? "已下载" : state === "error" ? "重试" : "下载";
++}
+ function trackList(a: MusicAlbum, discs: number) {
+   if (!a.tracks.length)
+-    return `<div class="empty-tracks"><strong>${demo ? "这是一张封面演示卡片" : "这个专辑还没有可播放曲目"}</strong><p>${demo ? "用于检查封面原始比例与卡片材质。扫描本地音乐库后，这里会显示真实曲目。" : "请检查音乐文件是否完整，并重新扫描音乐库。"}</p><button data-action="library">打开音乐库设置 ↗</button></div>`;
++    return `<div class="empty-tracks"><strong>这个专辑还没有可播放曲目</strong><p>请刷新塞壬唱片官方曲库后重试。</p><button data-action="library">打开塞壬唱片设置 ↗</button></div>`;
+   let disc = -1;
+   return `<div class="track-list" aria-label="专辑歌曲列表">${a.tracks
+     .map((t, index) => {
+@@ -866,7 +872,8 @@
+           ? `<div class="disc-heading">DISC ${String(discNo).padStart(2, "0")}</div>`
+           : "";
+       disc = discNo;
+-      return `${head}<button class="track-row" data-track="${esc(t.id)}" ${a.offline ? "disabled" : ""} aria-label="播放 ${esc(t.title)}"><span class="track-number">${String(t.trackNumber || index + 1).padStart(2, "0")}</span><span class="track-name"><strong>${esc(t.title)}</strong><small>${esc(t.artist)}</small></span><span class="track-format">${esc(t.format)}${!t.browserPlayable ? '<i title="需要兼容的播放内核"> ↗</i>' : ""}</span><span class="track-duration">${time(t.duration)}</span></button>`;
++      const cid = t.sirenCid || t.id.replace(/^siren-/, "");
++      return `${head}<button class="track-row" data-track="${esc(t.id)}" ${a.offline ? "disabled" : ""} aria-label="播放 ${esc(t.title)}"><span class="track-number">${String(t.trackNumber || index + 1).padStart(2, "0")}</span><span class="track-name"><strong>${esc(t.title)}</strong><small>${esc(t.artist)}</small></span><span class="track-format">${esc(t.format)}${!t.browserPlayable ? '<i title="需要兼容的播放内核"> ↗</i>' : ""}</span><span class="track-duration">${time(t.duration)}</span><span class="track-download" data-action="download-track" data-cid="${esc(cid)}" role="button" tabindex="0" aria-label="下载 ${esc(t.title)}">${sirenDownloadLabel(cid)}</span></button>`;
+     })
+     .join("")}</div>${producerBlock(a)}`;
+ }
+@@ -1042,9 +1049,9 @@
+   if (!panel) panelFocus = document.activeElement as HTMLElement;
+   panel = next;
+   const titles = {
+-    library: ["MUSIC LIBRARY", "本地音乐库"],
++    library: ["SIREN RECORDS", "塞壬唱片曲库"],
+     search: ["FIND MUSIC", "搜索专辑与歌曲"],
+-    settings: ["SYSTEM SETTINGS", "播放与画质"],
++    settings: ["SYSTEM SETTINGS", "播放与下载"],
+   };
+   $("#music-panel-root").innerHTML =
+     `<div class="music-panel-scrim" data-action="dismiss-panel"><section class="music-panel" role="dialog" aria-modal="true" aria-labelledby="music-panel-title"><div class="panel-heading"><div><small>${titles[next][0]}</small><h2 id="music-panel-title">${titles[next][1]}</h2></div><button data-action="close-panel" aria-label="关闭">×</button></div><div id="panel-body"></div></section></div>`;
+@@ -1062,7 +1069,7 @@
+   effects.play("page-open");
+   if (next === "library") renderLibraryPanel();
+   if (next === "search") renderSearchPanel();
+-  if (next === "settings") renderSettingsPanel();
++  if (next === "settings") { renderSettingsPanel(); void loadSirenConfig(); }
+   (
+     document.querySelector<HTMLElement>("#album-search") ||
+     $("#music-panel-root button")
+@@ -1070,27 +1077,10 @@
+ }
+ function renderLibraryPanel() {
+   $("#panel-body").innerHTML =
+-    `<p class="panel-intro">根目录中的每首单曲各是一张卡片，优先使用自身内嵌封面。子文件夹按专辑展示，优先使用文件夹封面。</p><label class="field-label" for="music-roots">音乐文件夹<span>多个目录各占一行</span></label><textarea id="music-roots" rows="3" placeholder="/Users/你的用户名/Music">${esc(library.roots.map((r) => r.path).join("\n"))}</textarea><div class="panel-actions"><button class="primary-button" data-action="scan">保存目录并扫描 ↗</button><button data-action="rescan">重新扫描</button></div><div id="scan-status" class="scan-status"></div><div class="library-metrics"><div><b>${library.albums.length}</b><span>专辑</span></div><div><b>${library.albums.reduce((n, a) => n + a.tracks.length, 0)}</b><span>曲目</span></div><div><b>${library.genres.filter((g) => library.albums.some((a) => a.genreId === g.id)).length}</b><span>流派</span></div></div><section class="panel-section"><h3>在线资料与本地分类</h3><p>向 MusicBrainz 查询专辑名称与艺术家，补充流派和制作人员；音乐文件留在本机。已有资料使用缓存，人工分类优先保留。</p><button data-action="enrich-library" class="text-button">补充缺失的在线资料 ↗</button><button data-action="edit-genres" class="text-button">编辑流派归并规则 ↗</button></section><section class="panel-section"><h3>封面显示</h3><p>方形、竖版、横版封面均保持原始比例，完整放入卡片正面。没有封面时显示专辑名称占位，不使用其他专辑的图片。</p>${!library.albums.length ? '<button data-action="demo" class="text-button">查看演示封面 ↗</button>' : ""}</section>`;
++    `<p class="panel-intro">当前曲库来自塞壬唱片官网，专辑、歌曲、官方封面和音频地址均由官方接口提供。播放时未下载的歌曲会由本地服务代理。</p><div class="panel-actions"><button class="primary-button" data-action="refresh-siren">刷新官方曲库 ↗</button><a class="text-button" href="https://monster-siren.hypergryph.com/music" target="_blank" rel="noopener">打开塞壬唱片官网 ↗</a></div><div class="library-metrics"><div><b>${library.albums.length}</b><span>专辑</span></div><div><b>${library.albums.reduce((n, a) => n + a.tracks.length, 0)}</b><span>曲目</span></div><div><b>${library.siren?.tracks || library.albums.reduce((n, a) => n + a.tracks.length, 0)}</b><span>官方曲目</span></div></div><section class="panel-section"><h3>官方封面</h3><p>播放器只使用塞壬唱片 API 返回的官方封面，不调用网易云或第三方封面服务。</p></section><section class="panel-section"><h3>下载器</h3><p>在专辑详情的每首歌曲右侧点击“下载”，服务会保存官方音频、歌词、官方封面和元数据。下载目录与格式选项可在“播放与下载”设置中调整。</p></section>`;
+   updateScanStatus();
+-  const configSection = document.createElement("section");
+-  configSection.className = "panel-section";
+-  configSection.id = "online-config";
+-  $("#panel-body").append(configSection);
+-  void (async () => {
+-    try {
+-      const config = await request<{
+-        musicBrainzContact?: string;
+-        musicBrainzConfigured?: boolean;
+-        onlineEnabled?: boolean;
+-      }>("/api/config");
+-      if (!configSection.isConnected) return;
+-      configSection.innerHTML = `<h3>资料库连接</h3><label class="field-label" for="metadata-contact">MusicBrainz 联系邮箱或项目网址</label><input id="metadata-contact" type="text" value="${esc(config.musicBrainzContact || "")}" placeholder="你的联系邮箱或公开项目网址"><p>按 MusicBrainz 要求用于标识本应用的资料请求，不用于注册或订阅。</p><label class="settings-row"><span>扫描后自动补充新专辑资料<small>已有缓存不重复查询；断网仍可浏览与播放</small></span><input type="checkbox" id="online-enabled" ${config.onlineEnabled ? "checked" : ""}></label><button class="text-button" data-action="save-online">保存资料库设置 ↗</button><p>${config.musicBrainzConfigured ? "资料库请求标识已配置。" : "尚未配置；本地曲库和播放已可使用。"}</p>`;
+-    } catch (error) {
+-      if (configSection.isConnected)
+-        configSection.innerHTML = `<p>${esc((error as Error).message)}</p>`;
+-    }
+-  })();
+ }
++
+ function updateScanStatus() {
+   const el = document.querySelector("#scan-status");
+   if (el)
+@@ -1137,7 +1127,8 @@
+ }
+ function renderSettingsPanel() {
+   $("#panel-body").innerHTML =
+-    `<section class="panel-section"><h3>外观主题</h3><div class="theme-cards">${(["day", "night"] as Theme[]).map((t) => `<button data-theme="${t}" aria-pressed="${preferences.theme === t}" class="${t}"><i></i><strong>${themeNames[t]}</strong><span>${t === "day" ? "暖白玻璃与日光" : "极简星空与透光白卡"}</span></button>`).join("")}</div></section>
++    `<section class="panel-section" id="siren-settings"><h3>塞壬唱片下载</h3><p>下载器使用塞壬唱片官网的音频、歌词与官方封面。下载内容保存在本机，不写入项目目录。</p><label class="field-label" for="siren-download-dir">下载目录</label><input id="siren-download-dir" type="text" placeholder="~/Music/Siren-MSR"><label class="settings-row"><span>自动下载歌词</span><input type="checkbox" id="siren-auto-lyrics" checked></label><label class="settings-row"><span>WAV 转 FLAC<small>需要系统安装 ffmpeg</small></span><input type="checkbox" id="siren-flac"></label><label class="settings-row"><span>并发下载数<small>1–8</small></span><input id="siren-concurrency" type="number" min="1" max="8" value="3"></label><button class="primary-button" data-action="save-siren-config">保存下载设置 ↗</button><p id="siren-config-status" class="scan-status"></p></section>
++    <section class="panel-section"><h3>外观主题</h3><div class="theme-cards">${(["day", "night"] as Theme[]).map((t) => `<button data-theme="${t}" aria-pressed="${preferences.theme === t}" class="${t}"><i></i><strong>${themeNames[t]}</strong><span>${t === "day" ? "暖白玻璃与日光" : "极简星空与透光白卡"}</span></button>`).join("")}</div></section>
+     <section class="panel-section"><h3>音乐库排列</h3><label class="settings-row"><span>排列方式<small>切换后自动刷新页面</small></span><select id="music-sort" aria-label="音乐库排列方式">${(["genre", "artist", "album"] as MusicSortMode[]).map((value) => `<option value="${value}" ${preferences.sortMode === value ? "selected" : ""}>${sortLabels[value].name}</option>`).join("")}</select></label><p>按歌手时，同一歌手的专辑放在同一列；按专辑名时，按拼音或字母顺序排列，每 12 张一列。</p></section>
+     <section class="panel-section" id="introduction-settings"><h3>专辑介绍</h3><p>从公开百科查询并更新专辑介绍，附上资料来源。介绍保存在本机，不需要配置 MusicBrainz 联系信息；音乐文件不会上传。</p><p id="introduction-coverage"></p><button class="primary-button" id="introduction-refresh" data-action="introductions-library">查询 / 更新专辑介绍 ↗</button><progress id="introduction-progress" aria-label="专辑介绍查询进度" max="1" value="0" hidden></progress><p id="introduction-status" class="scan-status" role="status" aria-live="polite"></p><details id="introduction-missing" hidden><summary></summary><ul></ul></details></section>
+     ${qualityMarkup(renderQuality)}
+@@ -1146,7 +1137,50 @@
+     <section class="panel-section"><h3>开发与资源</h3><p>音乐适配与维护：<a href="https://github.com/RonaldDeng/Rhine-Music-Demo" target="_blank" rel="noopener">RonaldDeng ↗</a><br>原版界面：<a href="https://github.com/LBEILC/RhineLabUI" target="_blank" rel="noopener">LBEILC / RhineLabUI ↗</a></p><p><a href="/licenses/project-mit.txt" target="_blank" rel="noopener">代码 MIT 许可 ↗</a> · <a href="https://github.com/RonaldDeng/Rhine-Music-Demo/blob/v0.2.0/NOTICE.md" target="_blank" rel="noopener">版权与资源说明 ↗</a></p><a href="/?original=1&scene=archive" target="_blank" rel="noopener">打开原版档案界面 ↗</a><p><a href="/fonts/MiSans-license.pdf" target="_blank" rel="noopener">MiSans 字体许可 ↗</a></p></section>`;
+   updateQuality();
+   updateIntroductionStatus();
++}
++async function loadSirenConfig() {
++  try {
++    const config = await request<{ downloadDir: string; autoLyrics: boolean; convertWavToFlac: boolean; concurrency: number }>("/api/siren/config");
++    const dir = document.querySelector<HTMLInputElement>("#siren-download-dir");
++    const lyrics = document.querySelector<HTMLInputElement>("#siren-auto-lyrics");
++    const flac = document.querySelector<HTMLInputElement>("#siren-flac");
++    const concurrency = document.querySelector<HTMLInputElement>("#siren-concurrency");
++    if (dir) dir.value = config.downloadDir;
++    if (lyrics) lyrics.checked = config.autoLyrics;
++    if (flac) flac.checked = config.convertWavToFlac;
++    if (concurrency) concurrency.value = String(config.concurrency);
++  } catch (error) {
++    const status = document.querySelector("#siren-config-status");
++    if (status) status.textContent = (error as Error).message;
++  }
++}
++async function downloadSirenTrack(cid: string, target: HTMLElement) {
++  if (sirenDownloadState.get(cid) === "running") return;
++  sirenDownloadState.set(cid, "running");
++  target.textContent = "下载中";
++  try {
++    const job = await request<{ id: string }>("/api/siren/download", { cids: [cid] });
++    sirenDownloadJobs.set(cid, job.id);
++    for (let attempt = 0; attempt < 240; attempt++) {
++      const status = await request<{ state: string; completed: number; failed: number; errors?: { error: string }[] }>(`/api/siren/download/status/${encodeURIComponent(job.id)}`);
++      if (status.state === "running") { await new Promise((resolve) => setTimeout(resolve, 500)); continue; }
++      if (status.state === "completed" || status.state === "completed_with_errors") {
++        if (status.failed) throw new Error(status.errors?.[0]?.error || "下载失败");
++        sirenDownloadState.set(cid, "done");
++        target.textContent = "已下载";
++        notify("官方音频、歌词和封面已保存。");
++        return;
++      }
++      throw new Error(status.errors?.[0]?.error || "下载失败");
++    }
++    throw new Error("下载任务超时");
++  } catch (error) {
++    sirenDownloadState.set(cid, "error");
++    target.textContent = "重试";
++    notify((error as Error).message);
++  }
+ }
++
+ function updateQuality() {
+   renderQuality = normalizeQuality(renderQuality);
+   preferences.renderQuality = renderQuality;
+@@ -1261,6 +1295,12 @@
+     setTheme(target.dataset.theme as Theme);
+     return;
+   }
++  if (target.dataset.action === "download-track" && target.dataset.cid) {
++    e.preventDefault();
++    e.stopPropagation();
++    void downloadSirenTrack(target.dataset.cid, target);
++    return;
++  }
+   if (target.dataset.track) {
+     playAlbum(target.dataset.track);
+     return;
+@@ -1355,6 +1395,26 @@
+     case "rescan":
+       void scan();
+       break;
++    case "refresh-siren":
++      void loadLibrary(true);
++      closePanel();
++      notify("正在刷新塞壬唱片官方曲库。");
++      break;
++    case "save-siren-config":
++      void (async () => {
++        try {
++          const config = await request("/api/siren/config", {
++            downloadDir: $<HTMLInputElement>("#siren-download-dir").value.trim(),
++            autoLyrics: $<HTMLInputElement>("#siren-auto-lyrics").checked,
++            convertWavToFlac: $<HTMLInputElement>("#siren-flac").checked,
++            concurrency: Number($<HTMLInputElement>("#siren-concurrency").value),
++          });
++          const status = document.querySelector("#siren-config-status");
++          if (status) status.textContent = `已保存：${(config as { downloadDir: string }).downloadDir}`;
++          notify("塞壬唱片下载设置已保存。");
++        } catch (error) { notify((error as Error).message); }
++      })();
++      break;
+     case "enrich-album":
+       void enrich(true);
+       break;
+--- verification/music-player.ts.baseline -> src/music-player.ts ---
+--- verification/music-player.ts.baseline	2026-10-01 17:35:24
++++ src/music-player.ts	2026-10-01 17:44:17
+@@ -413,7 +413,7 @@
+       if (active()) this.fail(this.playbackError(track, audio.error));
+       else if (this.song === audio) this.cancelSongFade();
+     });
+-    audio.src = `/api/audio/${encodeURIComponent(track.id)}`;
++    audio.src = track.audioUrl || `/api/audio/${encodeURIComponent(track.id)}`;
+     return audio;
+   }
+
+--- verification/music-server.mjs.baseline -> scripts/music-server.mjs ---
+--- verification/music-server.mjs.baseline	2026-10-01 17:35:24
++++ scripts/music-server.mjs	2026-10-01 17:58:06
+@@ -2,7 +2,9 @@
+ import path from 'node:path'
+ import { fileURLToPath } from 'node:url'
+ import { promises as fs, createReadStream } from 'node:fs'
++import { Readable } from 'node:stream'
+ import { MusicLibraryStore, safeRootList } from './music-library.mjs'
++import { API_ORIGIN, SirenService, sirenMime } from './siren-service.mjs'
+
+ const PROJECT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.woff': 'font/woff', '.woff2': 'font/woff2', '.glb': 'model/gltf-binary', '.gltf': 'model/gltf+json', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' }
+@@ -48,6 +50,33 @@
+   return { start, end }
+ }
+
++function officialAssetUrl(value) {
++  try {
++    const parsed = new URL(value)
++    return parsed.protocol === 'https:' && (parsed.hostname === 'monster-siren.hypergryph.com' || parsed.hostname.endsWith('.hycdn.cn'))
++  } catch { return false }
++}
++
++async function proxyOfficial(request, response, targetUrl, { fallbackMime = 'application/octet-stream', cache = 'no-cache' } = {}) {
++  if (!officialAssetUrl(targetUrl)) throw Object.assign(new Error('非官方塞壬唱片资源地址'), { status: 403 })
++  const headers = {}
++  if (request.headers.range) headers.range = request.headers.range
++  const upstream = await fetch(targetUrl, { headers, signal: AbortSignal.timeout(120000), redirect: 'error' })
++  const responseHeaders = {
++    'Content-Type': upstream.headers.get('content-type') || fallbackMime,
++    'Cache-Control': cache,
++    'Accept-Ranges': upstream.headers.get('accept-ranges') || 'bytes',
++    'X-Content-Type-Options': 'nosniff',
++  }
++  for (const key of ['content-length', 'content-range', 'last-modified', 'etag']) {
++    const value = upstream.headers.get(key)
++    if (value) responseHeaders[key] = value
++  }
++  response.writeHead(upstream.status, responseHeaders)
++  if (request.method === 'HEAD' || !upstream.body) return response.end()
++  Readable.fromWeb(upstream.body).on('error', () => response.destroy()).pipe(response)
++}
++
+ async function serveFile(request, response, descriptor, { cache = 'no-cache' } = {}) {
+   const [actualPath, actualRoot] = await Promise.all([fs.realpath(descriptor.path), fs.realpath(descriptor.allowedRoot)])
+   const relative = path.relative(actualRoot, actualPath)
+@@ -84,7 +113,9 @@
+   store: providedStore,
+   autoScan = true,
+ } = {}) {
++  const useSirenLibrary = !providedStore || typeof providedStore.snapshot !== 'function'
+   const store = providedStore ?? await new MusicLibraryStore({ dataDir, defaultRoots }).init()
++  const siren = await new SirenService({ dataDir }).init()
+   const server = http.createServer(async (request, response) => {
+     response.setHeader('X-Content-Type-Options', 'nosniff')
+     response.setHeader('Referrer-Policy', 'same-origin')
+@@ -96,12 +127,52 @@
+       const route = decodeURIComponent(url.pathname)
+       if (route.includes('\0') || route.includes('\\')) return json(response, 400, { error: '无效路径' })
+       const get = request.method === 'GET' || request.method === 'HEAD'
+-      if (route === '/api/health' && get) return json(response, 200, { service: 'rhine-local-music', projectDir: PROJECT_DIR, pid: process.pid })
++      if (route === '/api/health' && get) return json(response, 200, { service: 'siren-music', projectDir: PROJECT_DIR, pid: process.pid, officialSource: API_ORIGIN })
+       if (route === '/api/library' && get) {
+-        // A user or Codex can edit genre-rules.json while the player is running.
++        if (useSirenLibrary) return json(response, 200, await siren.snapshot())
+         await store.reloadRules()
+         return json(response, 200, store.snapshot())
+       }
++      if (route === '/api/library/local' && get) {
++        await store.reloadRules()
++        return json(response, 200, store.snapshot())
++      }
++      if (route === '/api/siren/catalog' && get) return json(response, 200, await siren.catalogResponse({ refresh: url.searchParams.get('refresh') === '1' }))
++      const sirenSong = /^\/api\/siren\/song\/([A-Za-z0-9_-]+)$/.exec(route)
++      if (sirenSong && get) return json(response, 200, { song: await siren.getSong(sirenSong[1]) })
++      const sirenAlbum = /^\/api\/siren\/album\/([A-Za-z0-9_-]+)$/.exec(route)
++      if (sirenAlbum && get) return json(response, 200, { album: await siren.getAlbum(sirenAlbum[1]) })
++      if (route === '/api/siren/config') {
++        if (get) return json(response, 200, siren.snapshotConfig())
++        if (request.method === 'POST') return json(response, 200, await siren.updateConfig(await bodyJson(request)))
++      }
++      if (route === '/api/siren/download' && request.method === 'POST') {
++        const value = await bodyJson(request)
++        const cids = value.cids ?? (value.cid !== undefined ? [value.cid] : [])
++        if (!Array.isArray(cids) || cids.length > 500 || cids.some((cid) => !/^[A-Za-z0-9_-]+$/.test(String(cid)))) return json(response, 400, { error: 'cids 必须是合法歌曲 ID 数组' })
++        return json(response, 202, await siren.startDownload(cids))
++      }
++      const sirenStatus = /^\/api\/siren\/download\/status\/([A-Za-z0-9_-]+)$/.exec(route)
++      if (sirenStatus && get) {
++        const job = siren.status(sirenStatus[1])
++        return job ? json(response, 200, job) : json(response, 404, { error: '下载任务不存在' })
++      }
++      const sirenCover = /^\/api\/siren\/cover\/([A-Za-z0-9_-]+)$/.exec(route)
++      if (sirenCover && get) {
++        const local = await siren.findDownloadedCover(sirenCover[1])
++        if (local) return await serveFile(request, response, { path: local, allowedRoot: siren.config.downloadDir, mime: sirenMime(local) }, { cache: 'private, max-age=86400' })
++        const album = await siren.getAlbum(sirenCover[1])
++        const coverUrl = album.coverDeUrl || album.coverUrl
++        if (!coverUrl) return json(response, 404, { error: '专辑没有官方封面' })
++        return await proxyOfficial(request, response, coverUrl, { fallbackMime: 'image/jpeg', cache: 'public, max-age=86400' })
++      }
++      const sirenStream = /^\/api\/siren\/stream\/([A-Za-z0-9_-]+)$/.exec(route)
++      if (sirenStream && get) {
++        const info = await siren.streamInfo(sirenStream[1])
++        if (info.local) return await serveFile(request, response, { path: info.local, allowedRoot: siren.config.downloadDir, mime: sirenMime(info.local) }, { cache: 'private, no-cache' })
++        if (!info.song?.sourceUrl) return json(response, 404, { error: '歌曲没有官方音频地址' })
++        return await proxyOfficial(request, response, info.song.sourceUrl, { fallbackMime: 'audio/mpeg', cache: 'private, no-cache' })
++      }
+       if (route === '/api/library/scan' && request.method === 'POST') {
+         const value = await bodyJson(request)
+         if (store.scanPromise) return json(response, 202, store.snapshot())
+@@ -167,7 +238,7 @@
+   })
+   server.requestTimeout = 30_000
+   if (autoScan) server.once('listening', () => { void store.scan().catch(() => {}) })
+-  return { server, store }
++  return { server, store, siren }
+ }
+
+ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+@@ -176,7 +247,7 @@
+   const { server, store } = await createMusicServer()
+   server.on('error', (error) => { console.error(error.message); process.exitCode = 1 })
+   server.listen(port, '127.0.0.1', () => {
+-    console.log(`Rhine Local Music  http://127.0.0.1:${port}/`)
++    console.log(`Siren Music  http://127.0.0.1:${port}/`)
+     console.log(`音乐索引：${store.dataDir}`)
+     console.log(`音乐目录：${store.config.roots.join('、') || '尚未配置，在界面添加目录'}`)
+   })
+--- verification/launch-music.mjs.baseline -> scripts/launch-music.mjs ---
+--- verification/launch-music.mjs.baseline	2026-10-01 18:12:42
++++ scripts/launch-music.mjs	2026-10-01 18:09:34
+@@ -6,7 +6,7 @@
+ import { spawn, spawnSync } from 'node:child_process'
+
+ const PROJECT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+-export const SERVICE_ID = 'rhine-local-music'
++export const SERVICE_ID = 'siren-music'
+ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+ const exists = async (file) => fs.access(file).then(() => true, () => false)
+
+--- verification/check-music-launcher.mjs.baseline -> scripts/check-music-launcher.mjs ---
+--- verification/check-music-launcher.mjs.baseline	2026-10-01 18:12:42
++++ scripts/check-music-launcher.mjs	2026-10-01 18:10:50
+@@ -143,7 +143,7 @@
+   })
+   const valid = await request({ host: '127.0.0.1:5175' })
+   assert.equal(valid.status, 200)
+-  assert.deepEqual(valid.body, { service: SERVICE_ID, projectDir: PROJECT_DIR, pid: process.pid })
++  assert.deepEqual(valid.body, { service: SERVICE_ID, projectDir: PROJECT_DIR, pid: process.pid, officialSource: 'https://monster-siren.hypergryph.com' })
+   assert.equal((await request({ host: 'example.com' })).status, 403)
+   assert.equal((await request({ host: '127.0.0.1:5175', origin: 'https://example.com' })).status, 403)
+ })
+
+Additional modified/new files:
+scripts/siren-service.mjs
+README.md
+docs/MUSIC-SERVICE.md
+src/music.css
+verification/MODIFIED_FILE
+verification/VERIFICATION.txt
+verification/ROLLBACK.sh
+
+Current hashes:
+d4b114618c90ed1d1545a0a0b72023c764e7f819f7b1e4bb7149d0f43c50c6ba  package.json
+2bc9311222de9790b5ac06a4e7829ac8329fa62a3f644d082832e5e09c5f325a  src/music-app.ts
+31d785b572d46e18c66c79ba068b1be2fa80414c782619659c756b802018d47e  src/music-player.ts
+1e91eca998da8e088fd3df44183b0a2ed8e07db2856c4d0899b8a290a83c034e  scripts/music-server.mjs
+da5d8c02bb268985770d35ee3d5d6602c3a208c7c037b8912d0e93e2f61d958a  scripts/launch-music.mjs
+0e5424ab79b156d8edbe200ebed3af271ae481b3cca8ab4e93b301c14788d58c  scripts/check-music-launcher.mjs
+7fd8b6d13b35c671a1d6e6ff336b5b3b22fe70a63ae6eac809b64acae945a30b  scripts/siren-service.mjs
+53494bd71474250f460511e8386f5746c34ec4070157c09b29af3f63d9f584a1  README.md
+e049f26aa032c3708257049bf154e63d698d16df59ab0e649f5296abdd5df065  docs/MUSIC-SERVICE.md
+e6c4bdd7d07ab30e501eeb161e17c3e91faf630fb2a8cc332f2d98b8dff83117  src/music.css
+55a83bd3e3e06a13e590627c437fa3ad72d56ad172e83924ae8471c47268a21f  .gitignore

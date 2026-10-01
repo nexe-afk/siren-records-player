@@ -1,0 +1,21 @@
+MODIFIED_FILE manifest
+Project: /Volumes/PortableSSD/源码/塞壬唱片
+State: modified working tree retained
+
+Primary modified files:
+- README.md
+- docs/MUSIC-SERVICE.md
+- scripts/music-server.mjs
+- scripts/siren-service.mjs
+- scripts/launch-music.mjs
+- scripts/check-music-launcher.mjs
+- src/music-app.ts
+- src/music-player.ts
+- src/music-types.ts
+- src/music.css
+- .gitignore
+
+Verification artifacts:
+- verification/DIFF_FILE
+- verification/VERIFICATION.txt
+- verification/ROLLBACK.sh
