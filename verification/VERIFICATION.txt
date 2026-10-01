@@ -187,3 +187,35 @@ Result: GitHub settings page visibly displayed the uploaded Siren Records cover 
 
 GITHUB_TOPICS
 Verified configured topics: arknights, monster-siren, siren-records, music-downloader, music-player, nodejs, threejs, typescript, vite, rhine-music-demo.
+CURRENT_ROUND_2026-10-01
+Changed branch: official Siren metadata, artist updates, and estimated audio facts
+Changed fields:
+- /api/siren/info
+- /api/library.siren.artistUpdates
+- album releaseDate/background/productionDuration/metadataSource
+- track bitsPerSample/sampleRate/bitrate/duration/metadataEstimated/metadataSource
+- frontend album facts and artist-updates panels
+
+BASELINE_CURRENT
+Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && git show HEAD:scripts/siren-service.mjs >/dev/null && git show HEAD:src/music-app.ts >/dev/null)
+Input: committed Rhine/Siren baseline before the current metadata branch
+Result: HEAD baseline inspected successfully; current working tree retains the modified branch.
+Exit status: 0
+
+MODIFIED_CURRENT
+Command: (cd "/Volumes/PortableSSD/源码/塞壬唱片" && npm run check:content && npm run check:viewport && npm run build && npm run check:music && node --test scripts/check-music-launcher.mjs && npx tsc --noEmit && node --check scripts/music-server.mjs && node --check scripts/siren-service.mjs && node --check scripts/launch-music.mjs)
+Input: current modified project
+Literal result: check:content 18 passed; viewport passed; Vite/PWA build passed; check:music 16 tests passed plus scene/player/motion/camera/lighting/presentation/model checks; launcher 13 tests passed; TypeScript and Node syntax checks passed.
+Exit status: 0
+
+OFFICIAL_METADATA_SMOKE
+Command: curl -fsS http://127.0.0.1:5173/api/health; curl -fsS http://127.0.0.1:5173/api/siren/info; curl -fsS http://127.0.0.1:5173/api/library
+Input: running local Siren Music service
+Literal result: health service=siren-music, officialSource=https://monster-siren.hypergryph.com; /api/siren/info source=https://monster-siren.hypergryph.com/info with 16 updates; /api/library returned 295 albums and 903 tracks, siren.artistUpdates=16, first track duration=335s, 16 bit, 44100 Hz, 1411200 bps, metadataEstimated=true, metadataSource=official-audio-range-estimate; no #REF!, #DIV/0!, #N/A, or #VALUE! tokens.
+Exit status: 0
+
+ROLLBACK_CURRENT
+Command: "/tmp/siren-rollback-copy.5wFJyd/verification/ROLLBACK.sh" "/tmp/siren-rollback-copy.5wFJyd"
+Input: isolated rollback copy
+Literal result: ROLLBACK_STATUS=restored Rhine baseline contracts; rollback test passed all 13 launcher tests. The working project remains modified after verification.
+Exit status: 0

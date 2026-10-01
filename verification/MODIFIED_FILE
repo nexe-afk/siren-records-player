@@ -24,3 +24,11 @@ Current release-cover change:
 - Changed field: docs/assets/siren-records-readme-cover.png
 - Branch: GitHub README / repository cover generated with the configured image skill
 - Result: PNG 2048 x 1024, official-catalog visual language, README reference unchanged
+
+Current metadata branch:
+- /api/siren/info returns official artist updates from monster-siren.hypergryph.com/info.
+- /api/library.siren.artistUpdates contains 16 official updates.
+- Official album dates are extracted from official release resources; productionDuration is explicitly 官方未公开.
+- Audio metadata uses local parsed values when downloaded and official-audio-range-estimate values otherwise.
+- Frontend renders release date, background, production duration, bitrate, bit depth, sample rate, duration, estimate labels, and artist updates.
+- Last smoke test: 295 albums, 903 tracks, 16 artist updates; health and build endpoints passed.

@@ -19,6 +19,8 @@ export interface MusicTrack {
   relativePath: string;
   sirenCid?: string;
   source?: "local" | "siren";
+  metadataEstimated?: boolean;
+  metadataSource?: string;
 }
 
 export interface MusicProducer {
@@ -34,6 +36,11 @@ export interface MusicAlbum {
   title: string;
   artist: string;
   year?: number;
+  sirenAlbumCid?: string;
+  releaseDate?: string;
+  background?: string;
+  productionDuration?: string;
+  metadataSource?: string;
   discCount?: number;
   description?: string;
   descriptionSource?: {
@@ -66,6 +73,15 @@ export interface MusicAlbum {
     descriptionStatus?: "available" | "not-found" | "error";
     descriptionError?: string;
   };
+}
+
+export interface SirenArtistUpdate {
+  title: string;
+  date?: string;
+  description?: string;
+  coverUrl?: string;
+  sourceUrl: string;
+  category?: string;
 }
 
 export interface MusicGenre {
@@ -107,7 +123,14 @@ export interface MusicLibrary {
   };
   siren?: {
     source: string;
-    config?: { downloadDir: string; autoLyrics: boolean; convertWavToFlac: boolean; concurrency: number; officialCovers: boolean };
+    artistUpdates?: SirenArtistUpdate[];
+    config?: {
+      downloadDir: string;
+      autoLyrics: boolean;
+      convertWavToFlac: boolean;
+      concurrency: number;
+      officialCovers: boolean;
+    };
     albums: number;
     tracks: number;
   };

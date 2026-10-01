@@ -547,7 +547,12 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 42%, var(--veil) 66%, var(--page-bg) 96%);
+  background: linear-gradient(
+    90deg,
+    transparent 42%,
+    var(--veil) 66%,
+    var(--page-bg) 96%
+  );
 }
 .music-app[data-layout="portrait"] .music-browse-veil {
   background: linear-gradient(180deg, transparent 28%, var(--page-bg) 62%);
@@ -774,6 +779,57 @@
   font-size: 12px;
   line-height: 1.95;
   white-space: pre-line;
+}
+.album-source-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0 16px;
+}
+.album-source-facts div {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.album-source-facts dt {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 1.1px;
+  margin-bottom: 5px;
+}
+.album-source-facts dd {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.artist-updates {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 15px;
+}
+.artist-updates h3 {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  margin: 0 0 12px;
+}
+.artist-updates article {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 5px 10px;
+  padding: 8px 0;
+  border-bottom: 1px dotted var(--line);
+}
+.artist-updates time {
+  grid-row: span 2;
+  color: var(--muted);
+  font-size: 9px;
+}
+.artist-updates strong {
+  font-size: 11px;
+}
+.artist-updates article p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.55;
 }
 .source-note {
   display: flex;
@@ -2298,7 +2354,13 @@
   padding-inline: 0.15em;
   margin-inline-start: -0.15em;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, transparent, #000 0.02em, #000 calc(100% - 0.02em), transparent);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 0.02em,
+    #000 calc(100% - 0.02em),
+    transparent
+  );
 }
 .music-title-wheel {
   position: absolute;
@@ -2353,7 +2415,8 @@
     180deg,
     transparent calc(var(--portrait-callout-top) - 12vh),
     var(--veil) calc(var(--portrait-callout-top) + 7vh),
-    var(--page-bg) calc(var(--portrait-callout-top) + var(--portrait-callout-height))
+    var(--page-bg)
+      calc(var(--portrait-callout-top) + var(--portrait-callout-height))
   );
 }
 @media (max-height: 600px) {
