@@ -173,3 +173,17 @@ Input: release copy containing Siren integration
 Exit status: 0
 Literal output/result: ROLLBACK_STATUS=restored Rhine baseline contracts in /tmp/siren-rollback-copy.5wFJyd
 Restored behavior/status: rollback copy restored baseline launch contracts; working project retained the modified official-catalog branch and generated cover.
+
+REMOTE_RELEASE_2026-10-01
+Command: git push origin main
+Exit status: 0
+Literal output/result: To https://github.com/nexe-afk/siren-records-player.git; 6f7328a..50c3d8b main -> main
+Remote main verification: git ls-remote origin refs/heads/main -> 50c3d8be6b50192b359013bd1e143c71feceb20e refs/heads/main
+Remote tags verification: v1.0.0 and v1.0.1 present on origin.
+
+GITHUB_SOCIAL_PREVIEW_2026-10-01
+Action: upload /Volumes/PortableSSD/源码/塞壬唱片/docs/assets/siren-records-github-social-preview.jpg in repository Settings > General > Social preview.
+Result: GitHub settings page visibly displayed the uploaded Siren Records cover preview after processing; no processing error remained.
+
+GITHUB_TOPICS
+Verified configured topics: arknights, monster-siren, siren-records, music-downloader, music-player, nodejs, threejs, typescript, vite, rhine-music-demo.
